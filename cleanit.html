@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>HTML Cleaner-upper</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <script type="text/javascript" src="cleaner.js"></script>
+</head>
+
+<body>
+
+
+<textarea id="input" placeholder="Enter dirty HTML here..."></textarea>
+<textarea id="output" placeholder="Clean HTML comes out here"></textarea>
+<!-- Add a second area that shows the preview so they can compare clean vs. dirty? -->
+<div id="preview">
+    <div id="old" class="reset-me">Old HTML Preview</div>
+    <div id="new" class="reset-me">New HTML Preview</div>
+</div>
+<p><input type="button" value="Clean that HTML" onclick="goSanitize();" /></p>
+
+<style>
+
+    html {
+        box-sizing: border-box;
+    }
+    *, *:before, *:after {
+        box-sizing: inherit;
+    }
+    
+    body {
+        text-align: center;
+        background-color: #EEE;
+        font-size: 18px;
+        margin: 0;
+        padding: 0;
+    }
+
+    textarea {
+        /*width: 45%;*/
+        padding: 1em;
+        width: calc(50vw - 3.5em);
+        /*margin: 1em 2% 0 2%;*/
+        margin: 2em 0;
+        height: calc(50vh - 200px);
+        font-size: .8em;
+    }
+    #input {
+        float: left;
+        margin-left: 2.5em;
+    }
+
+    #output {
+        float: right;
+        margin-right: 2.5em;
+    }
+
+    input[type="button"] {
+        padding: 1em 0;
+        width: 280px;
+        background-color: #00A2B8;
+        color: white;
+        border: none;
+        font-size: .8em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    #preview {
+        width: calc(100vw - 4em);
+        height: calc(50vh);
+        margin-left: auto;
+        margin-right: auto;
+        overflow: auto;
+    }
+
+    #old {
+        float: left;
+        padding: 1em;
+        width: calc(50% - 1em);
+        min-height: 100%;
+        background-color: white;
+        border: 1px solid gray;
+    }
+
+    #new {
+        float: right;
+        padding: 1em;
+        width: calc(50% - 1em);
+        min-height: 100%;
+        background-color: white;
+        border: 1px solid gray;
+    }
+
+    .reset-me {
+        text-align: left;
+        font-size: 16px;
+    }
+
+    /*.reset-me,.reset-me *,.reset-me a:hover,.reset-me a:visited,.reset-me a:active{
+        background:none;
+        border:none;
+        bottom:auto;
+        clear:none;
+        cursor:default;
+        display: initial;
+        float:none;
+        font-family:Arial, Helvetica, sans-serif;
+        font-size:medium;
+        font-style:normal;
+        font-weight:normal;
+        height:auto;
+        left:auto;
+        letter-spacing:normal;
+        line-height:normal;
+        max-height:none;
+        max-width:none;
+        min-height:0;
+        min-width:0;
+        overflow:visible;
+        position:static;
+        right:auto;
+        text-align:left;
+        text-decoration:none;
+        text-indent:0;
+        text-transform:none;
+        top:auto;
+        visibility:visible;
+        white-space:normal;
+        width:auto;
+        z-index:auto;
+    }*/
+
+</style>
+
+<script>
+
+    var walk_the_DOM = function walk(node, func) {
+        func(node);
+        node = node.firstChild;
+        while (node) {
+            walk(node, func);
+            node = node.nextSibling;
+        }
+    };
+
+// TODO: Encode special characters
+// TODO: Remove successive &nbsp; characters
+
+    function escapeHtml(text) {
+      var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        "“": '&ldquo;',
+        "”": '&rdquo;',
+        "‘": '&lsquo;',
+        "’": '&rsquo;'
+      };
+
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+
+
+
+    function goSanitize() {
+        
+        var clean = false;
+        var dirtyHTML = document.createElement("div");
+        var inputText = document.getElementById("input").value;
+        dirtyHTML.innerHTML = inputText;
+
+        document.getElementById("old").innerHTML = dirtyHTML.innerHTML;
+
+        // Remove stuff:
+        while (!clean) {
+            clean = true;
+            walk_the_DOM(dirtyHTML, function(el) {
+                if(el.removeAttribute) {
+                    el.removeAttribute('id');
+                    el.removeAttribute('style');
+                    el.removeAttribute('class');
+                    el.removeAttribute('dir');
+                    console.log(el.nodeName);
+                    if(el.nodeName == "SPAN") {
+                        // Remove span elements after saving their contents
+                        var parent = el.parentNode;
+                        while (el.firstChild) {
+                            parent.insertBefore(el.firstChild, el);
+                        }
+                        parent.removeChild(el);
+            
+                        console.log("Removed element");
+                        clean = false;
+                    }
+                    if(el.nodeName == "IMG") {
+                        // Replace with placeholder?
+            
+                    }
+                    // Insert a new line after each element:
+                    // el.insertAdjacentHTML('beforeend', '\n');
+                }
+            });
+        }
+
+
+
+        var cleanHTML = dirtyHTML.innerHTML;
+        document.getElementById("output").value = cleanHTML;
+
+        document.getElementById("new").innerHTML = cleanHTML;
+
+    }
+    
+    
+    
+</script>
+
+</body>
+</html>
